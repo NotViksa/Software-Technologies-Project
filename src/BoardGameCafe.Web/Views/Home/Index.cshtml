@@ -1,0 +1,63 @@
+﻿@model HomeViewModel
+@{
+    ViewData["Title"] = "Начало";
+}
+
+<section class="hero-section rounded-4 p-4 p-lg-5 mb-4">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+            <span class="badge bg-warning text-dark mb-3">Кафене за настолни игри</span>
+            <h1 class="display-5 fw-bold mb-3">@(Model.Cafe?.Name ?? "Meeple House")</h1>
+            <p class="lead mb-3">@(Model.Cafe?.Description ?? "Каталог с настолни игри, уютни маси и резервации.")</p>
+            <p class="mb-1"><strong>Адрес:</strong> @(Model.Cafe?.Address ?? "София")</p>
+            <p class="mb-4">
+                <strong>Работно време:</strong>
+                @(Model.Cafe?.OpeningTime.ToString(@"hh\:mm") ?? "10:00") - @(Model.Cafe?.ClosingTime.ToString(@"hh\:mm") ?? "23:00")
+            </p>
+            <a class="btn btn-primary btn-lg" asp-controller="Games" asp-action="Index">Разгледай каталога</a>
+        </div>
+        <div class="col-lg-5">
+            <div class="row g-3">
+                <div class="col-4">
+                    <div class="stat-card h-100">
+                        <span class="stat-value">@Model.Summary.Games</span>
+                        <span class="stat-label">игри</span>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="stat-card h-100">
+                        <span class="stat-value">@Model.Summary.Tables</span>
+                        <span class="stat-label">маси</span>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="stat-card h-100">
+                        <span class="stat-value">@Model.Summary.AvailableCopies</span>
+                        <span class="stat-label">налично</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 mb-0">Игри в каталога</h2>
+    <a class="btn btn-outline-primary btn-sm" asp-controller="Games" asp-action="Index">Всички игри</a>
+</div>
+
+@if (Model.Games.Count == 0)
+{
+    <p class="text-muted">Все още няма добавени игри.</p>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var game in Model.Games)
+        {
+            <div class="col-md-6 col-lg-4">
+                <partial name="_GameCard" model="game" />
+            </div>
+        }
+    </div>
+}

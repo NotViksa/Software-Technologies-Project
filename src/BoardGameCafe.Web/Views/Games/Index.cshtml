@@ -1,0 +1,45 @@
+@model GamesIndexViewModel
+@{
+    ViewData["Title"] = "Каталог";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-1">Каталог с игри</h1>
+        <p class="text-muted mb-0">@Model.Games.Count резултата</p>
+    </div>
+</div>
+
+<form method="get" class="row g-2 mb-4">
+    <div class="col-md-6">
+        <input class="form-control" name="search" value="@Model.Search" placeholder="Търси по заглавие или категория" />
+    </div>
+    <div class="col-md-4">
+        <select class="form-select" name="category">
+            <option value="">Всички категории</option>
+            @foreach (var category in Model.Categories)
+            {
+                <option value="@category" selected="@(category == Model.Category)">@category</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-primary w-100" type="submit">Търси</button>
+    </div>
+</form>
+
+@if (Model.Games.Count == 0)
+{
+    <div class="alert alert-info">Няма намерени игри за зададените критерии.</div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var game in Model.Games)
+        {
+            <div class="col-md-6 col-lg-4">
+                <partial name="_GameCard" model="game" />
+            </div>
+        }
+    </div>
+}

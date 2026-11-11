@@ -1,0 +1,114 @@
+html {
+  font-size: 15px;
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  background-color: #f7f5f0;
+  color: #26332d;
+  margin-bottom: 70px;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+a {
+  color: #2f6b4f;
+}
+
+a:hover {
+  color: #245540;
+}
+
+.app-navbar {
+  background-color: #1f4033;
+}
+
+.app-navbar .nav-link,
+.app-navbar .navbar-brand,
+.app-navbar .btn-link {
+  color: #f4f1e8;
+}
+
+.app-navbar .nav-link:hover,
+.app-navbar .btn-link:hover {
+  color: #ffd166;
+}
+
+.hero-section {
+  background: linear-gradient(135deg, #1f4033 0%, #2f6b4f 60%, #4f8a67 100%);
+  color: #f9f7f1;
+  box-shadow: 0 18px 40px rgba(31, 64, 51, 0.18);
+}
+
+.hero-section .lead {
+  color: #e7efe9;
+}
+
+.stat-card {
+  background: #ffffff;
+  border: 1px solid #e3ded2;
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 96px;
+  box-shadow: 0 6px 18px rgba(38, 51, 45, 0.05);
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #1f4033;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #6c776f;
+}
+
+.game-card {
+  border: 1px solid #e3ded2;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(38, 51, 45, 0.05);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.game-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(38, 51, 45, 0.1);
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  line-height: 60px;
+  background: #ffffff;
+}
+
+.btn-primary {
+  background-color: #2f6b4f;
+  border-color: #2f6b4f;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: #245540;
+  border-color: #245540;
+}
+
+.btn-outline-primary {
+  color: #2f6b4f;
+  border-color: #2f6b4f;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+  background-color: #2f6b4f;
+  border-color: #2f6b4f;
+  color: #ffffff;
+}

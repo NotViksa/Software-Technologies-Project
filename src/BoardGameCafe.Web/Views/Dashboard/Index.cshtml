@@ -1,0 +1,66 @@
+@model DashboardStatsDto
+@{
+    ViewData["Title"] = "Табло";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">Табло</h1>
+        <p class="text-muted mb-0">Базов преглед на кафенето</p>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <span class="stat-value">@Model.TodayReservations</span>
+            <span class="stat-label">резервации днес</span>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <span class="stat-value">@Model.PendingReservations</span>
+            <span class="stat-label">чакащи потвърждение</span>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <span class="stat-value">@Model.ActiveSessions</span>
+            <span class="stat-label">активни сесии</span>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <span class="stat-value">@Model.OverdueLoans</span>
+            <span class="stat-label">закъснели връщания</span>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <span class="stat-value">@Model.AvailableCopies</span>
+            <span class="stat-label">свободни екземпляра</span>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <span class="stat-value">@Model.DamagedCopies</span>
+            <span class="stat-label">повредени екземпляра</span>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <span class="stat-value">@Model.Games</span>
+            <span class="stat-label">игри</span>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <span class="stat-value">@Model.Tables</span>
+            <span class="stat-label">маси в @Model.Zones зони</span>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-light border mt-4 mb-0">
+    Модулите за резервации, инвентар, служителски процеси и известия ще разширят това табло.
+</div>
