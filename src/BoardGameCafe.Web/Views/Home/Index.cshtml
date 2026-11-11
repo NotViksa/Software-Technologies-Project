@@ -1,63 +1,101 @@
 ﻿@model HomeViewModel
 @{
     ViewData["Title"] = "Начало";
+    var cafe = Model.Cafe;
 }
 
-<section class="hero-section rounded-4 p-4 p-lg-5 mb-4">
-    <div class="row align-items-center g-4">
-        <div class="col-lg-7">
-            <span class="badge bg-warning text-dark mb-3">Кафене за настолни игри</span>
-            <h1 class="display-5 fw-bold mb-3">@(Model.Cafe?.Name ?? "Meeple House")</h1>
-            <p class="lead mb-3">@(Model.Cafe?.Description ?? "Каталог с настолни игри, уютни маси и резервации.")</p>
-            <p class="mb-1"><strong>Адрес:</strong> @(Model.Cafe?.Address ?? "София")</p>
-            <p class="mb-4">
-                <strong>Работно време:</strong>
-                @(Model.Cafe?.OpeningTime.ToString(@"hh\:mm") ?? "10:00") - @(Model.Cafe?.ClosingTime.ToString(@"hh\:mm") ?? "23:00")
-            </p>
-            <a class="btn btn-primary btn-lg" asp-controller="Games" asp-action="Index">Разгледай каталога</a>
+<section class="hero">
+    <div class="hero__copy">
+        <p class="hero__eyebrow">@(cafe?.Address ?? "София · бул. Някъде 123")</p>
+        <h1 class="hero__title">Meeple<br /><em>House</em></h1>
+        <p class="hero__meta">Каталог · Маси · Резервации</p>
+        <div class="hero__actions">
+            <a class="button button--primary" asp-controller="Games" asp-action="Index">
+                Виж каталога
+                <span aria-hidden="true">↘</span>
+            </a>
+            <a class="button button--ghost" href="#visit">Адрес и часове</a>
         </div>
-        <div class="col-lg-5">
-            <div class="row g-3">
-                <div class="col-4">
-                    <div class="stat-card h-100">
-                        <span class="stat-value">@Model.Summary.Games</span>
-                        <span class="stat-label">игри</span>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="stat-card h-100">
-                        <span class="stat-value">@Model.Summary.Tables</span>
-                        <span class="stat-label">маси</span>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="stat-card h-100">
-                        <span class="stat-value">@Model.Summary.AvailableCopies</span>
-                        <span class="stat-label">налично</span>
-                    </div>
-                </div>
+        <div class="hero__tokens" aria-label="Кафенето в цифри">
+            <div class="token token--mustard">
+                <span class="token__value">@Model.Summary.Games</span>
+                <span class="token__label">игри</span>
             </div>
+            <div class="token token--teal">
+                <span class="token__value">@Model.Summary.Tables</span>
+                <span class="token__label">маси</span>
+            </div>
+            <div class="token token--tomato">
+                <span class="token__value">@Model.Summary.AvailableCopies</span>
+                <span class="token__label">копия</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="hero__scene" aria-hidden="true">
+        <div class="table">
+            <div class="table__card table__card--one"><span>M</span></div>
+            <div class="table__card table__card--two"><span>H</span></div>
+            <div class="table__card table__card--three"><span>★</span></div>
+            <svg class="table__die table__die--one" viewBox="0 0 100 100" focusable="false">
+                <rect x="5" y="5" width="90" height="90" rx="18" fill="#fbf7ef" stroke="#171512" stroke-width="6" />
+                <circle cx="29" cy="29" r="7" fill="#171512" />
+                <circle cx="71" cy="29" r="7" fill="#171512" />
+                <circle cx="50" cy="50" r="7" fill="#171512" />
+                <circle cx="29" cy="71" r="7" fill="#171512" />
+                <circle cx="71" cy="71" r="7" fill="#171512" />
+            </svg>
+            <svg class="table__die table__die--two" viewBox="0 0 100 100" focusable="false">
+                <rect x="5" y="5" width="90" height="90" rx="18" fill="#f4b942" stroke="#171512" stroke-width="6" />
+                <circle cx="30" cy="30" r="7" fill="#171512" />
+                <circle cx="70" cy="70" r="7" fill="#171512" />
+            </svg>
+            <svg class="table__meeple" viewBox="0 0 64 64" focusable="false">
+                <circle cx="32" cy="15" r="8" fill="currentColor" />
+                <path d="M23 27h18l5 12-5 3v13H23V42l-5-3 5-12Z" fill="currentColor" />
+                <path d="M20 30 9 36l3.5 6.5 9-5M44 30l11 6-3.5 6.5-9-5" fill="currentColor" />
+            </svg>
+            <div class="table__sticker">OPEN</div>
         </div>
     </div>
 </section>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="h4 mb-0">Игри в каталога</h2>
-    <a class="btn btn-outline-primary btn-sm" asp-controller="Games" asp-action="Index">Всички игри</a>
-</div>
-
-@if (Model.Games.Count == 0)
-{
-    <p class="text-muted">Все още няма добавени игри.</p>
-}
-else
-{
-    <div class="row g-3">
-        @foreach (var game in Model.Games)
-        {
-            <div class="col-md-6 col-lg-4">
-                <partial name="_GameCard" model="game" />
-            </div>
-        }
+<section class="shelf" aria-labelledby="shelf-title">
+    <div class="section-heading">
+        <h2 id="shelf-title">Игри на рафта</h2>
+        <a class="text-link" asp-controller="Games" asp-action="Index">Всички игри <span aria-hidden="true">→</span></a>
     </div>
-}
+
+    @if (Model.Games.Count == 0)
+    {
+        <p class="empty-state">Каталогът е празен.</p>
+    }
+    else
+    {
+        <div class="game-grid">
+            @foreach (var game in Model.Games)
+            {
+                <partial name="_GameCard" model="game" />
+            }
+        </div>
+    }
+</section>
+
+<section class="visit" id="visit" aria-labelledby="visit-title">
+    <div class="visit__heading">
+        <h2 id="visit-title">Адрес и часове</h2>
+    </div>
+    <div class="visit__details">
+        <div class="visit__item">
+            <span class="visit__label">Адрес</span>
+            <span class="visit__value">@(cafe?.Address ?? "бул. Някъде 123, София")</span>
+        </div>
+        <div class="visit__item">
+            <span class="visit__label">Работно време</span>
+            <span class="visit__value">
+                @(cafe?.OpeningTime.ToString(@"hh\:mm") ?? "10:00") – @(cafe?.ClosingTime.ToString(@"hh\:mm") ??
+                "23:00")
+            </span>
+        </div>
+    </div>
+</section>

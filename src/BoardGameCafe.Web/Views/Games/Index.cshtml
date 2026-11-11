@@ -1,45 +1,47 @@
 @model GamesIndexViewModel
 @{
     ViewData["Title"] = "Каталог";
+    var countLabel = Model.Games.Count == 1 ? "игра" : "игри";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<section class="catalogue-head" aria-labelledby="catalogue-title">
     <div>
-        <h1 class="h3 mb-1">Каталог с игри</h1>
-        <p class="text-muted mb-0">@Model.Games.Count резултата</p>
+        <h1 id="catalogue-title">Каталог</h1>
+        <p class="catalogue-count"><strong>@Model.Games.Count</strong> @countLabel</p>
     </div>
-</div>
+</section>
 
-<form method="get" class="row g-2 mb-4">
-    <div class="col-md-6">
-        <input class="form-control" name="search" value="@Model.Search" placeholder="Търси по заглавие или категория" />
+<form method="get" class="filter-bar">
+    <div class="field">
+        <label for="search">Търсене</label>
+        <input id="search" name="search" value="@Model.Search" autocomplete="off" />
     </div>
-    <div class="col-md-4">
-        <select class="form-select" name="category">
-            <option value="">Всички категории</option>
+    <div class="field">
+        <label for="category">Категория</label>
+        <select id="category" name="category">
+            <option value="">Всички</option>
             @foreach (var category in Model.Categories)
             {
                 <option value="@category" selected="@(category == Model.Category)">@category</option>
             }
         </select>
     </div>
-    <div class="col-md-2">
-        <button class="btn btn-primary w-100" type="submit">Търси</button>
-    </div>
+    <button class="button button--primary" type="submit">Покажи</button>
 </form>
 
 @if (Model.Games.Count == 0)
 {
-    <div class="alert alert-info">Няма намерени игри за зададените критерии.</div>
+    <div class="empty-state">
+        <p>Няма игри по тези критерии.</p>
+        <a class="text-link" asp-controller="Games" asp-action="Index">Изчисти филтрите</a>
+    </div>
 }
 else
 {
-    <div class="row g-3">
+    <div class="game-grid">
         @foreach (var game in Model.Games)
         {
-            <div class="col-md-6 col-lg-4">
-                <partial name="_GameCard" model="game" />
-            </div>
+            <partial name="_GameCard" model="game" />
         }
     </div>
 }

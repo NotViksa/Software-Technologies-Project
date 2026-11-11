@@ -17,11 +17,11 @@ public class ResultTests
     [Fact]
     public void Failure_CarriesErrorCodeAndMessage()
     {
-        var result = Result.Failure(ErrorCodes.ReservationConflict, "Table is already booked.");
+        var result = Result.Failure(ErrorCodes.ValidationError, "Invalid request.");
 
         Assert.True(result.IsFailure);
-        Assert.Equal(ErrorCodes.ReservationConflict, result.ErrorCode);
-        Assert.Equal("Table is already booked.", result.ErrorMessage);
+        Assert.Equal(ErrorCodes.ValidationError, result.ErrorCode);
+        Assert.Equal("Invalid request.", result.ErrorMessage);
     }
 
     [Fact]

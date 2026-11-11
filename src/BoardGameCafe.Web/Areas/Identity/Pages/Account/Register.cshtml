@@ -1,0 +1,46 @@
+@page
+@model BoardGameCafe.Web.Areas.Identity.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Регистрация";
+}
+
+<section class="auth-page">
+    <div class="auth-card">
+        <h1>Регистрация</h1>
+        <form method="post" asp-route-returnUrl="@Model.ReturnUrl" class="auth-form">
+            <div asp-validation-summary="ModelOnly" class="form-error"></div>
+
+            <div class="field">
+                <label asp-for="Input.DisplayName">Име</label>
+                <input asp-for="Input.DisplayName" autocomplete="name" />
+                <span asp-validation-for="Input.DisplayName" class="form-error"></span>
+            </div>
+
+            <div class="field">
+                <label asp-for="Input.Email">Имейл</label>
+                <input asp-for="Input.Email" autocomplete="username" />
+                <span asp-validation-for="Input.Email" class="form-error"></span>
+            </div>
+
+            <div class="field">
+                <label asp-for="Input.Password">Парола</label>
+                <input asp-for="Input.Password" autocomplete="new-password" />
+                <span asp-validation-for="Input.Password" class="form-error"></span>
+            </div>
+
+            <div class="field">
+                <label asp-for="Input.ConfirmPassword">Повтори паролата</label>
+                <input asp-for="Input.ConfirmPassword" autocomplete="new-password" />
+                <span asp-validation-for="Input.ConfirmPassword" class="form-error"></span>
+            </div>
+
+            <button class="button button--primary" type="submit">Създай профил</button>
+        </form>
+
+        <p class="auth-switch">Имаш профил? <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Вход</a></p>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

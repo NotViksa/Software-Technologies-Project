@@ -35,11 +35,10 @@ public static class DbInitializer
         }
 
         await SeedRolesAsync(provider);
-        var customer = await SeedUsersAsync(provider);
+        await SeedUsersAsync(provider);
         await SeedCafeAsync(db);
         await SeedZonesAndTablesAsync(db);
         await SeedGamesAsync(db);
-        await SeedReservationsAsync(db, customer);
     }
 
     private static async Task SeedRolesAsync(IServiceProvider provider)
@@ -55,13 +54,13 @@ public static class DbInitializer
         }
     }
 
-    private static async Task<ApplicationUser> SeedUsersAsync(IServiceProvider provider)
+    private static async Task SeedUsersAsync(IServiceProvider provider)
     {
         var userManager = provider.GetRequiredService<UserManager<ApplicationUser>>();
 
-        await EnsureUserAsync(userManager, "manager@boardgamecafe.local", "Виктор Петров", Roles.Manager);
-        await EnsureUserAsync(userManager, "employee@boardgamecafe.local", "Иван Христов", Roles.Employee);
-        return await EnsureUserAsync(userManager, "customer@boardgamecafe.local", "Мария Димитрова", Roles.Customer);
+        await EnsureUserAsync(userManager, "manager@boardgamecafe.local", "Manager", Roles.Manager);
+        await EnsureUserAsync(userManager, "employee@boardgamecafe.local", "Employee", Roles.Employee);
+        await EnsureUserAsync(userManager, "customer@boardgamecafe.local", "Customer", Roles.Customer);
     }
 
     private static async Task<ApplicationUser> EnsureUserAsync(
@@ -107,7 +106,7 @@ public static class DbInitializer
         db.Cafes.Add(new Cafe
         {
             Name = "Meeple House",
-            Address = "бул. Витоша 42, София",
+            Address = "бул. Някъде 123, София",
             Description = "Кафене за настолни игри с богат каталог, уютни зони и помощ от гейм мастър.",
             TimeZoneId = "Europe/Sofia",
             OpeningTime = new TimeSpan(10, 0, 0),
@@ -185,48 +184,4 @@ public static class DbInitializer
         await db.SaveChangesAsync();
     }
 
-    private static async Task SeedReservationsAsync(AppDbContext db, ApplicationUser customer)
-    {
-        if (await db.Reservations.AnyAsync())
-        {
-            return;
-        }
-
-        var smallTable = await db.Tables.OrderBy(x => x.Capacity).FirstOrDefaultAsync();
-        var largeTable = await db.Tables.Where(x => x.Capacity >= 4).OrderBy(x => x.Capacity).FirstOrDefaultAsync();
-        var games = await db.Games.OrderBy(x => x.Title).Take(2).ToListAsync();
-
-        if (smallTable is null || largeTable is null || games.Count < 2)
-        {
-            return;
-        }
-
-        var today = DateTime.Today;
-
-        var pending = new Reservation
-        {
-            CustomerUserId = customer.Id,
-            TableId = smallTable.Id,
-            StartAt = today.AddHours(18),
-            EndAt = today.AddHours(20),
-            PartySize = 2,
-            Status = ReservationStatus.Pending,
-            Notes = "Демо резервация"
-        };
-        pending.Games.Add(new ReservationGame { GameId = games[0].Id });
-
-        var confirmed = new Reservation
-        {
-            CustomerUserId = customer.Id,
-            TableId = largeTable.Id,
-            StartAt = today.AddDays(1).AddHours(19),
-            EndAt = today.AddDays(1).AddHours(21),
-            PartySize = 4,
-            Status = ReservationStatus.Confirmed
-        };
-        confirmed.Games.Add(new ReservationGame { GameId = games[1].Id, IsCopyGuaranteed = false });
-
-        db.Reservations.AddRange(pending, confirmed);
-        await db.SaveChangesAsync();
-    }
 }

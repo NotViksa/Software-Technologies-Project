@@ -21,8 +21,6 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
     public DbSet<ReservationGame> ReservationGames => Set<ReservationGame>();
     public DbSet<Session> Sessions => Set<Session>();
     public DbSet<Loan> Loans => Set<Loan>();
-    public DbSet<EmailOutboxMessage> EmailOutbox => Set<EmailOutboxMessage>();
-    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

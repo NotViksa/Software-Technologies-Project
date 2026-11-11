@@ -14,7 +14,7 @@ The project is a modular monolith built with ASP.NET Core MVC. It has four layer
 | Member 4 (Nadezhda) | Identity, roles, access control, café administration, staff confirmation, audit |
 | Member 5 (Daniel) | Email outbox, Brevo integration, acceptance/E2E tests, demo |
 
-The base leaves contracts for modules 2-5 in `Application/Abstractions` and `Application/Dtos`. Implementations belong to the responsible member.
+The base provides shared entities and infrastructure for modules 2-5. Services, DTOs and domain rules for those modules belong to the responsible member.
 
 ## Technology
 

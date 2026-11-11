@@ -3,44 +3,43 @@
     ViewData["Title"] = Model.Title;
 }
 
-<a class="btn btn-link px-0 mb-2" asp-controller="Games" asp-action="Index">&larr; Назад към каталога</a>
+<a class="back-link" asp-controller="Games" asp-action="Index">
+    <span aria-hidden="true">←</span>
+    Каталог
+</a>
 
-<div class="row g-4">
-    <div class="col-lg-8">
-        <div class="card game-card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                    <h1 class="h3 mb-0">@Model.Title</h1>
-                    <span class="badge bg-secondary">@Model.Category</span>
-                </div>
-                <p>@Model.Description</p>
-                <dl class="row mb-0">
-                    <dt class="col-sm-4">Играчи</dt>
-                    <dd class="col-sm-8">@Model.MinPlayers-@Model.MaxPlayers</dd>
-                    <dt class="col-sm-4">Продължителност</dt>
-                    <dd class="col-sm-8">@Model.DurationMinutes минути</dd>
-                    <dt class="col-sm-4">Сложност</dt>
-                    <dd class="col-sm-8">@Model.Complexity</dd>
-                    <dt class="col-sm-4">Екземпляри</dt>
-                    <dd class="col-sm-8">@Model.AvailableCopies от @Model.TotalCopies налични</dd>
-                </dl>
+<article class="game-detail" data-category="@Model.Category">
+    <div class="game-detail__art">
+        <span class="game-detail__category">@Model.Category</span>
+        <span class="game-detail__glyph" aria-hidden="true">@Model.Title.Substring(0, 1)</span>
+    </div>
+
+    <div class="game-detail__info">
+        <h1>@Model.Title</h1>
+        <p class="game-detail__description">@Model.Description</p>
+
+        <dl class="specs">
+            <div class="spec">
+                <dt>Играчи</dt>
+                <dd>@Model.MinPlayers–@Model.MaxPlayers</dd>
             </div>
+            <div class="spec">
+                <dt>Време</dt>
+                <dd>@Model.DurationMinutes мин</dd>
+            </div>
+            <div class="spec">
+                <dt>Сложност</dt>
+                <dd>@Model.Complexity</dd>
+            </div>
+            <div class="spec">
+                <dt>Копия</dt>
+                <dd>@Model.TotalCopies</dd>
+            </div>
+        </dl>
+
+        <div class="availability @(Model.AvailableCopies == 0 ? "availability--none" : "")">
+            <strong>@Model.AvailableCopies</strong>
+            <span>свободни от @Model.TotalCopies</span>
         </div>
     </div>
-    <div class="col-lg-4">
-        <div class="card game-card">
-            <div class="card-body">
-                <h2 class="h5">Резервация</h2>
-                @if (Model.AvailableCopies > 0)
-                {
-                    <p class="text-success mb-3">Има свободен екземпляр от играта.</p>
-                }
-                else
-                {
-                    <p class="text-muted mb-3">В момента няма свободен екземпляр.</p>
-                }
-                <p class="small text-muted mb-0">Резервациите се добавят от модула за резервации и разпределение.</p>
-            </div>
-        </div>
-    </div>
-</div>
+</article>

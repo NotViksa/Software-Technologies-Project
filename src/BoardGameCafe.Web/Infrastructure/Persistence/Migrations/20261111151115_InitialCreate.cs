@@ -53,22 +53,6 @@ namespace BoardGameCafe.Web.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "AuditLogs",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    Action = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    EntityType = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    EntityId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AuditLogs", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Cafes",
                 columns: table => new
                 {
@@ -84,26 +68,6 @@ namespace BoardGameCafe.Web.Infrastructure.Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Cafes", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "EmailOutbox",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    To = table.Column<string>(type: "nvarchar(320)", maxLength: 320, nullable: false),
-                    Subject = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Body = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(16)", maxLength: 16, nullable: false),
-                    Attempts = table.Column<int>(type: "int", nullable: false),
-                    LastError = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    NextAttemptAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    SentAt = table.Column<DateTime>(type: "datetime2", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_EmailOutbox", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -455,16 +419,6 @@ namespace BoardGameCafe.Web.Infrastructure.Persistence.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AuditLogs_Timestamp",
-                table: "AuditLogs",
-                column: "Timestamp");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_EmailOutbox_Status_NextAttemptAt",
-                table: "EmailOutbox",
-                columns: new[] { "Status", "NextAttemptAt" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_GameCopies_GameId_Status",
                 table: "GameCopies",
                 columns: new[] { "GameId", "Status" });
@@ -573,13 +527,7 @@ namespace BoardGameCafe.Web.Infrastructure.Persistence.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "AuditLogs");
-
-            migrationBuilder.DropTable(
                 name: "Cafes");
-
-            migrationBuilder.DropTable(
-                name: "EmailOutbox");
 
             migrationBuilder.DropTable(
                 name: "Loans");
