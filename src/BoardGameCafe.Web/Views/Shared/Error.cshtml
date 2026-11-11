@@ -1,0 +1,13 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "Грешка";
+}
+
+<section class="error-page">
+    <h1>Грешка</h1>
+    @if (Model.ShowRequestId)
+    {
+        <p class="error-page__code">@Model.RequestId</p>
+    }
+    <a class="button button--primary" asp-controller="Home" asp-action="Index">Към началото</a>
+</section>

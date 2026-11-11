@@ -1,0 +1,13 @@
+**/bin
+**/obj
+**/TestResults
+**/.vs
+**/.vscode
+**/.idea
+**/*.user
+**/*.suo
+.git
+.gitignore
+docs
+README.md
+.env

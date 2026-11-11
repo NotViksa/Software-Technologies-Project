@@ -1,0 +1,66 @@
+@model DashboardStatsDto
+@{
+    ViewData["Title"] = "Табло";
+    var today = DateTime.Now.ToString("dddd, d MMMM", System.Globalization.CultureInfo.GetCultureInfo("bg-BG"));
+}
+
+<section class="dashboard">
+    <header class="dashboard-head">
+        <h1>Табло</h1>
+        <p class="dashboard-date">@today</p>
+    </header>
+
+    <section class="dashboard-group" aria-labelledby="today-title">
+        <h2 id="today-title">Днес</h2>
+        <div class="stats-grid">
+            <article class="stat-tile stat-tile--tomato">
+                <span class="stat-tile__value">@Model.TodayReservations</span>
+                <span class="stat-tile__name">Резервации</span>
+            </article>
+            <article class="stat-tile stat-tile--mustard">
+                <span class="stat-tile__value">@Model.PendingReservations</span>
+                <span class="stat-tile__name">Чакащи</span>
+            </article>
+            <article class="stat-tile stat-tile--teal">
+                <span class="stat-tile__value">@Model.ActiveSessions</span>
+                <span class="stat-tile__name">Сесии</span>
+            </article>
+        </div>
+    </section>
+
+    <section class="dashboard-group" aria-labelledby="inventory-title">
+        <h2 id="inventory-title">Инвентар</h2>
+        <div class="stats-grid">
+            <article class="stat-tile stat-tile--teal">
+                <span class="stat-tile__value">@Model.AvailableCopies</span>
+                <span class="stat-tile__name">Свободни копия</span>
+            </article>
+            <article class="stat-tile stat-tile--tomato">
+                <span class="stat-tile__value">@Model.DamagedCopies</span>
+                <span class="stat-tile__name">Повредени</span>
+            </article>
+            <article class="stat-tile stat-tile--mustard">
+                <span class="stat-tile__value">@Model.OverdueLoans</span>
+                <span class="stat-tile__name">Закъснели</span>
+            </article>
+        </div>
+    </section>
+
+    <section class="dashboard-group" aria-labelledby="cafe-title">
+        <h2 id="cafe-title">Кафене</h2>
+        <div class="stats-grid">
+            <article class="stat-tile stat-tile--mustard">
+                <span class="stat-tile__value">@Model.Games</span>
+                <span class="stat-tile__name">Игри</span>
+            </article>
+            <article class="stat-tile stat-tile--teal">
+                <span class="stat-tile__value">@Model.Tables</span>
+                <span class="stat-tile__name">Маси</span>
+            </article>
+            <article class="stat-tile stat-tile--tomato">
+                <span class="stat-tile__value">@Model.Zones</span>
+                <span class="stat-tile__name">Зони</span>
+            </article>
+        </div>
+    </section>
+</section>

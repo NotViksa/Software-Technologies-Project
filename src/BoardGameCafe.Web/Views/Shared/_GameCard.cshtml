@@ -1,0 +1,22 @@
+@model GameListItemDto
+
+<article class="game-box" data-category="@Model.Category">
+    <a class="game-box__link" asp-controller="Games" asp-action="Details" asp-route-id="@Model.Id" aria-label="@Model.Title, детайли">
+        <div class="game-box__art">
+            <span class="game-box__category">@Model.Category</span>
+            <span class="game-box__glyph" aria-hidden="true">@Model.Title.Substring(0, 1)</span>
+            <span class="game-box__stock @(Model.AvailableCopies == 0 ? "is-empty" : "")">
+                <strong>@Model.AvailableCopies</strong>
+                <span>свободни</span>
+            </span>
+        </div>
+        <div class="game-box__body">
+            <h3 class="game-box__title">@Model.Title</h3>
+            <ul class="game-box__meta">
+                <li>@Model.MinPlayers–@Model.MaxPlayers</li>
+                <li>@Model.DurationMinutes мин</li>
+                <li>@Model.Complexity</li>
+            </ul>
+        </div>
+    </a>
+</article>

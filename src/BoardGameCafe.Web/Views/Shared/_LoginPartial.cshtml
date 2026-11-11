@@ -1,0 +1,22 @@
+@using Microsoft.AspNetCore.Identity
+@using BoardGameCafe.Web.Domain.Entities
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+@if (SignInManager.IsSignedIn(User))
+{
+    var user = await UserManager.GetUserAsync(User);
+    <div class="auth-nav">
+        <span class="auth-nav__user">@(user?.DisplayName ?? User.Identity?.Name)</span>
+        <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post">
+            <button type="submit" class="auth-nav__action auth-nav__action--ghost">Изход</button>
+        </form>
+    </div>
+}
+else
+{
+    <div class="auth-nav">
+        <a class="auth-nav__action auth-nav__action--ghost" asp-area="Identity" asp-page="/Account/Login">Вход</a>
+        <a class="auth-nav__action auth-nav__action--solid" asp-area="Identity" asp-page="/Account/Register">Регистрация</a>
+    </div>
+}

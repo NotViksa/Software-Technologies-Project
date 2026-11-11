@@ -1,0 +1,45 @@
+@model GameDetailsDto
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<a class="back-link" asp-controller="Games" asp-action="Index">
+    <span aria-hidden="true">←</span>
+    Каталог
+</a>
+
+<article class="game-detail" data-category="@Model.Category">
+    <div class="game-detail__art">
+        <span class="game-detail__category">@Model.Category</span>
+        <span class="game-detail__glyph" aria-hidden="true">@Model.Title.Substring(0, 1)</span>
+    </div>
+
+    <div class="game-detail__info">
+        <h1>@Model.Title</h1>
+        <p class="game-detail__description">@Model.Description</p>
+
+        <dl class="specs">
+            <div class="spec">
+                <dt>Играчи</dt>
+                <dd>@Model.MinPlayers–@Model.MaxPlayers</dd>
+            </div>
+            <div class="spec">
+                <dt>Време</dt>
+                <dd>@Model.DurationMinutes мин</dd>
+            </div>
+            <div class="spec">
+                <dt>Сложност</dt>
+                <dd>@Model.Complexity</dd>
+            </div>
+            <div class="spec">
+                <dt>Копия</dt>
+                <dd>@Model.TotalCopies</dd>
+            </div>
+        </dl>
+
+        <div class="availability @(Model.AvailableCopies == 0 ? "availability--none" : "")">
+            <strong>@Model.AvailableCopies</strong>
+            <span>свободни от @Model.TotalCopies</span>
+        </div>
+    </div>
+</article>
