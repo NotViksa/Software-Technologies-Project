@@ -53,7 +53,7 @@ dotnet run --project src/BoardGameCafe.Web
 
 The default connection string uses LocalDB. Change `ConnectionStrings:DefaultConnection` in `appsettings.json` if needed.
 
-The application applies migrations and seeds demo data at startup. Health check: `http://localhost:5000/health` (see `Properties/launchSettings.json` for the exact local port).
+The application applies migrations and seeds demo data at startup. Local health check: `http://localhost:5093/health` (see `Properties/launchSettings.json` for the exact port).
 
 ## Docker
 
