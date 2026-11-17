@@ -12,4 +12,10 @@ public class Game
     public string Complexity { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
     public ICollection<GameCopy> Copies { get; set; } = new List<GameCopy>();
+
+    public bool SupportsPlayerCount(int playersCount)
+    {
+        return IsActive && playersCount >= MinPlayers && playersCount <= MaxPlayers;
+    }
+
 }
