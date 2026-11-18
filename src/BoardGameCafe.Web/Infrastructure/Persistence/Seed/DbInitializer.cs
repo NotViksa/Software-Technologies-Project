@@ -180,6 +180,13 @@ public static class DbInitializer
             }
         }
 
+        games[0].Copies.Add(new GameCopy
+        {
+            InventoryCode = "BG-001-03",
+            Condition = GameCondition.Damaged,
+            Status = GameCopyStatus.Damaged
+        });
+
         db.Games.AddRange(games);
         await db.SaveChangesAsync();
     }
