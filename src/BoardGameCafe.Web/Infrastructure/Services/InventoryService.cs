@@ -118,7 +118,7 @@ public class InventoryService : IInventoryService
         return null;
     }
 
-    // 2 връща списък с всички екземпляри на дадена игра
+    //  връща списък с всички екземпляри на дадена игра
     public async Task<IReadOnlyList<GameCopyDto>> GetCopiesByGameAsync(Guid gameId, CancellationToken ct = default)
     {
         var allGames = await _db.Games.ToListAsync(ct);
@@ -155,7 +155,7 @@ public class InventoryService : IInventoryService
         return result;
     }
 
-    // 3 предаване на екземпляр на клиенти
+    //  предаване на екземпляр на клиенти
     public async Task<Result<LoanDto>> LendCopyAsync(
         Guid reservationId,
         Guid gameCopyId,
@@ -199,7 +199,7 @@ public class InventoryService : IInventoryService
         return Result<LoanDto>.Success(CreateLoanDto(loan, copy, gameTitle));
     }
 
-    // 4 връщане на екземпляр от клиенти
+    // връщане на екземпляр от клиенти
     public async Task<Result<LoanDto>> ReturnCopyAsync(
         Guid loanId,
         GameCondition conditionAfterReturn,
@@ -235,7 +235,7 @@ public class InventoryService : IInventoryService
         return Result<LoanDto>.Success(CreateLoanDto(loan, copy, gameTitle));
     }
 
-    // 5 отбелязване на повреда и пренасочване на бъдещи резервации
+    //  отбелязване на повреда и пренасочване на бъдещи резервации
     public async Task<Result<DamageReportResultDto>> MarkCopyDamagedAsync(
         Guid gameCopyId,
         CancellationToken ct = default)
@@ -297,7 +297,7 @@ public class InventoryService : IInventoryService
         });
     }
 
-    // 6 проверка за закъснели заемания (над 15 минути след крайния час)
+    //  проверка за закъснели заемания (над 15 минути след крайния час)
     public async Task<int> ProcessOverdueLoansAsync(DateTime currentTimeUtc, CancellationToken ct = default)
     {
         var allLoans = await _db.Loans.ToListAsync(ct);
