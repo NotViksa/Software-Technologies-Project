@@ -199,4 +199,106 @@ public class ReservationAllocatorTests
         Assert.True(result.IsSuccess);
         Assert.Equal(healthyCopy.Id, result.Value.Copy?.Id);
     }
+    
+    [Fact]
+    public void Allocate_AntiFragmentation_PrefersTableWithBackToBackBookingOverEmptyTable()
+    {
+        var tableA = new Table { Id = Guid.NewGuid(), Name = "T-A", Capacity = 4, IsActive = true };
+        var tableB = new Table { Id = Guid.NewGuid(), Name = "T-B", Capacity = 4, IsActive = true };
+        
+        // Table B already has a reservation from 12:00 to 14:00.
+        // A new request for 14:00 to 16:00 should pick Table B (0 min idle gap) to keep Table A completely free for long sessions.
+        var existingReservations = new List<Reservation>
+        {
+            new()
+            {
+                TableId = tableB.Id,
+                StartAt = BaseDate.AddHours(12),
+                EndAt = BaseDate.AddHours(14),
+                Status = ReservationStatus.Confirmed
+            }
+        };
+        
+        var result = ReservationAllocator.Allocate(
+        4,
+        BaseDate.AddHours(14),
+        BaseDate.AddHours(16),
+        OpenTime,
+        CloseTime,
+        [tableA, tableB],
+        existingReservations);
+        
+        Assert.True(result.IsSuccess);
+        Assert.Equal(tableB.Id, result.Value.Table.Id);
+    }
+    
+    [Fact]
+    public void Allocate_CopyWearBalancing_PrefersBetterConditionAndLessUsedCopy()
+    {
+        var tables = CreateSampleTables();
+        var gameId = Guid.NewGuid();
+        
+        var wornCopy = new GameCopy
+        {
+            Id = Guid.NewGuid(),
+            GameId = gameId,
+            InventoryCode = "CATAN-01",
+            Condition = GameCondition.Worn,
+            Status = GameCopyStatus.Available
+        };
+        
+        var newCopy = new GameCopy
+        {
+            Id = Guid.NewGuid(),
+            GameId = gameId,
+            InventoryCode = "CATAN-02",
+            Condition = GameCondition.New,
+            Status = GameCopyStatus.Available
+        };
+        
+        var result = ReservationAllocator.Allocate(
+        4,
+        BaseDate.AddHours(14),
+        BaseDate.AddHours(16),
+        OpenTime,
+        CloseTime,
+        tables,
+        [],
+        gameId,
+        [wornCopy, newCopy]);
+        
+        Assert.True(result.IsSuccess);
+        Assert.Equal(newCopy.Id, result.Value.Copy?.Id);
+    }
+    
+    [Fact]
+    public void Allocate_WhenPartySizeExceedsGamePlayerLimits_ReturnsValidationError()
+    {
+        var tables = CreateSampleTables();
+        var duelGame = new Game
+        {
+            Id = Guid.NewGuid(),
+            Title = "7 Wonders Duel",
+            MinPlayers = 2,
+            MaxPlayers = 2,
+            DurationMinutes = 30,
+            IsActive = true
+        };
+
+        var result = ReservationAllocator.Allocate(
+        4,
+        BaseDate.AddHours(14),
+        BaseDate.AddHours(16),
+        OpenTime,
+        CloseTime,
+        tables,
+        [],
+        duelGame.Id,
+        [],
+        null,
+        duelGame);
+        
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorCodes.ValidationError, result.ErrorCode);
+    }
 }
