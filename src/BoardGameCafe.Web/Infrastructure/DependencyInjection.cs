@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.AddScoped<IAvailabilityService, AvailabilityService>();
         services.AddScoped<IInventoryService, InventoryService>();
         services.AddScoped<IBookingService, BookingService>();
+        services.AddScoped<SqlServerTransactionRunner>();
 
         return services;
     }
