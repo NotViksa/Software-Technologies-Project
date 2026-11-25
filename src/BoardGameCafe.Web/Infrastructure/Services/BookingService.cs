@@ -1,4 +1,5 @@
-﻿using BoardGameCafe.Web.Application.Abstractions;
+﻿using System.Data;
+using BoardGameCafe.Web.Application.Abstractions;
 using BoardGameCafe.Web.Application.Common;
 using BoardGameCafe.Web.Application.Dtos;
 using BoardGameCafe.Web.Domain.Entities;
@@ -30,116 +31,144 @@ public class BookingService : IBookingService
             return await Task.FromResult(Result<ReservationDto>.Failure(validation.ErrorCode!, validation.ErrorMessage!));
         }
         
-        var customerExists = await _dbContext.Users
-            .AsNoTracking()
-            .AnyAsync(u => u.Id == command.CustomerUserId, ct);
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
         
-        if (!customerExists)
+        try
         {
-            return Result<ReservationDto>.Failure(ErrorCodes.NotFound, "Customer account was not found.");
-        }
-        
-        var cafeQuery = _dbContext.Cafes
-            .AsNoTracking()
-            .Where(c => c.IsActive);
-        
-        if (command.CafeId.HasValue)
-        {
-            cafeQuery = cafeQuery.Where(c => c.Id == command.CafeId);
-        }
-        
-        var cafe = await cafeQuery
-            .OrderBy(c => c.Name)
-            .FirstOrDefaultAsync(ct);
-        
-        var openingTime = cafe?.OpeningTime ?? new TimeSpan(10, 0, 0);
-        var closingTime = cafe?.ClosingTime ?? new TimeSpan(23, 0, 0);
-        
-        Game? requestedGame = null;
-        List<GameCopy> candidateCopies = [];
-        
-        if (command.GameId.HasValue)
-        {
-            requestedGame = await _dbContext.Games
+            var customerExists = await _dbContext.Users
                 .AsNoTracking()
-                .FirstOrDefaultAsync(g => g.Id == command.GameId.Value && g.IsActive, ct);
+                .AnyAsync(u => u.Id == command.CustomerUserId, ct);
             
-            if (requestedGame is null)
+            if (!customerExists)
             {
-                return Result<ReservationDto>.Failure(ErrorCodes.NotFound, "Requested game was not found or is inactive.");
+                await transaction.RollbackAsync(ct);
+                return Result<ReservationDto>.Failure(ErrorCodes.NotFound, "Customer account was not found.");
             }
             
-            candidateCopies = await _dbContext.GameCopies
+            var cafeQuery = _dbContext.Cafes
                 .AsNoTracking()
-                .Where(c => c.GameId == command.GameId.Value)
-                .ToListAsync(ct);
-        }
-        
-        var tables = await _dbContext.Tables
-            .AsNoTracking()
-            .Where(t => t.IsActive && t.Zone.IsActive && t.Capacity >= command.PartySize)
-            .ToListAsync(ct);
-        
-        var dayStart = command.StartAt.Date;
-        var dayEnd = dayStart.AddDays(1);
-        
-        var sameDayReservations = await _dbContext.Reservations
-            .AsNoTracking()
-            .Include(r => r.Games)
-            .Where(r => r.StartAt >= dayStart && r.StartAt < dayEnd)
-            .ToListAsync(ct);
-        
-        var allocation = ReservationAllocator.Allocate(
-        command.PartySize,
-        command.StartAt,
-        command.EndAt,
-        openingTime,
-        closingTime,
-        tables,
-        sameDayReservations,
-        command.GameId,
-        candidateCopies,
-        command.PreferredTableId,
-        requestedGame);
-        
-        if (allocation.IsFailure)
-        {
-            return Result<ReservationDto>.Failure(allocation.ErrorCode!, allocation.ErrorMessage!);
-        }
-        
-        var allocatedTable = allocation.Value.Table;
-        var allocatedCopy = allocation.Value.Copy;
-        
-        var reservation = new Reservation
-        {
-            CustomerUserId = command.CustomerUserId,
-            TableId = allocatedTable.Id,
-            StartAt = command.StartAt,
-            EndAt = command.EndAt,
-            PartySize = command.PartySize,
-            Status = ReservationStatus.Pending,
-            Notes = command.Notes?.Trim() ?? string.Empty,
-            CreatedAt = DateTime.UtcNow
-        };
-        
-        ReservationGame? reservationGame = null;
-        if (command.GameId.HasValue && allocatedCopy is not null)
-        {
-            reservationGame = new ReservationGame
+                .Where(c => c.IsActive);
+            
+            if (command.CafeId.HasValue)
             {
-                ReservationId = reservation.Id,
-                GameId = command.GameId.Value,
-                GameCopyId = allocatedCopy.Id,
-                IsCopyGuaranteed = true
+                cafeQuery = cafeQuery.Where(c => c.Id == command.CafeId);
+            }
+            
+            var cafe = await cafeQuery
+                .OrderBy(c => c.Name)
+                .FirstOrDefaultAsync(ct);
+            
+            var cafeScopeId = command.CafeId ?? cafe?.Id ?? Guid.Empty;
+            
+            var openingTime = cafe?.OpeningTime ?? new TimeSpan(10, 0, 0);
+            var closingTime = cafe?.ClosingTime ?? new TimeSpan(23, 0, 0);
+            
+            // Acquire exclusive transaction-scoped application lock before reading availability
+            var lockAcquired = await TryAcquireReservationLockAsync(cafeScopeId, command.StartAt.Date, ct);
+            if (!lockAcquired)
+            {
+                await transaction.RollbackAsync(ct);
+                return Result<ReservationDto>.Failure(
+                ErrorCodes.ReservationConflict,
+                "Another booking request is currently being processed for this time slot. Please try again.");
+            }
+            
+            Game? requestedGame = null;
+            List<GameCopy> candidateCopies = [];
+            
+            if (command.GameId.HasValue)
+            {
+                requestedGame = await _dbContext.Games
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(g => g.Id == command.GameId.Value && g.IsActive, ct);
+                
+                if (requestedGame is null)
+                {
+                    await transaction.RollbackAsync(ct);
+                    return Result<ReservationDto>.Failure(ErrorCodes.NotFound, "Requested game was not found or is inactive.");
+                }
+                
+                candidateCopies = await _dbContext.GameCopies
+                    .AsNoTracking()
+                    .Where(c => c.GameId == command.GameId.Value)
+                    .ToListAsync(ct);
+            }
+            
+            var tables = await _dbContext.Tables
+                .AsNoTracking()
+                .Where(t => t.IsActive && t.Zone.IsActive && t.Capacity >= command.PartySize)
+                .ToListAsync(ct);
+            
+            var dayStart = command.StartAt.Date;
+            var dayEnd = dayStart.AddDays(1);
+            
+            var sameDayReservations = await _dbContext.Reservations
+                .AsNoTracking()
+                .Include(r => r.Games)
+                .Where(r => r.StartAt >= dayStart && r.StartAt < dayEnd)
+                .ToListAsync(ct);
+            
+            var allocation = ReservationAllocator.Allocate(
+            command.PartySize,
+            command.StartAt,
+            command.EndAt,
+            openingTime,
+            closingTime,
+            tables,
+            sameDayReservations,
+            command.GameId,
+            candidateCopies,
+            command.PreferredTableId,
+            requestedGame);
+            
+            if (allocation.IsFailure)
+            {
+                await transaction.RollbackAsync(ct);
+                return Result<ReservationDto>.Failure(allocation.ErrorCode!, allocation.ErrorMessage!);
+            }
+            
+            var allocatedTable = allocation.Value.Table;
+            var allocatedCopy = allocation.Value.Copy;
+            
+            var reservation = new Reservation
+            {
+                CustomerUserId = command.CustomerUserId,
+                TableId = allocatedTable.Id,
+                StartAt = command.StartAt,
+                EndAt = command.EndAt,
+                PartySize = command.PartySize,
+                Status = ReservationStatus.Pending,
+                Notes = command.Notes?.Trim() ?? string.Empty,
+                CreatedAt = DateTime.UtcNow
             };
             
-            reservation.Games.Add(reservationGame);
+            ReservationGame? reservationGame = null;
+            if (command.GameId.HasValue && allocatedCopy is not null)
+            {
+                reservationGame = new ReservationGame
+                {
+                    ReservationId = reservation.Id,
+                    GameId = command.GameId.Value,
+                    GameCopyId = allocatedCopy.Id,
+                    IsCopyGuaranteed = true
+                };
+                
+                reservation.Games.Add(reservationGame);
+            }
+            
+            _dbContext.Reservations.Add(reservation);
+            await _dbContext.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct);
+            
+            return Result<ReservationDto>.Success(MapToDto(reservation, allocatedTable, reservationGame));
         }
-        
-        _dbContext.Reservations.Add(reservation);
-        await _dbContext.SaveChangesAsync(ct);
-        
-        return Result<ReservationDto>.Success(MapToDto(reservation, allocatedTable, reservationGame));
+        catch (Exception e) when (IsConcurrencyOrDeadlockException(e))
+        {
+            await transaction.RollbackAsync(ct);
+            return Result<ReservationDto>.Failure(
+            ErrorCodes.ReservationConflict,
+            "The selected table or game copy was just booked by another request.");
+        }
     }
     
     public Task<Result> CancelAsync(Guid reservationId, CancellationToken ct) => throw new NotImplementedException();
