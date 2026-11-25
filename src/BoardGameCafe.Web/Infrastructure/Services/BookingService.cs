@@ -5,6 +5,7 @@ using BoardGameCafe.Web.Domain.Entities;
 using BoardGameCafe.Web.Domain.Enums;
 using BoardGameCafe.Web.Domain.Rules;
 using BoardGameCafe.Web.Infrastructure.Persistence;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace BoardGameCafe.Web.Infrastructure.Services;
@@ -12,6 +13,7 @@ namespace BoardGameCafe.Web.Infrastructure.Services;
 public class BookingService : IBookingService
 {
     private const int MaxNotesLength = 500;
+    private const int AppLockTimeoutMs = 5000;
     
     private readonly AppDbContext _dbContext;
     
@@ -183,5 +185,47 @@ public class BookingService : IBookingService
         reservationGame?.GameId,
         reservationGame?.GameCopyId,
         reservationGame?.IsCopyGuaranteed ?? false);
+    }
+    
+    private async Task<bool> TryAcquireReservationLockAsync(Guid cafeScopeId, DateTime reservationDate, CancellationToken ct)
+    {
+        if (!_dbContext.Database.IsSqlServer())
+        {
+            return true;
+        }
+        
+        var lockResource = $"Reservation_Lock_{cafeScopeId:N}_{reservationDate:yyyyMMdd}";
+        
+        var lockResult = await _dbContext.Database
+            .SqlQueryRaw<int>(
+            """
+            DECLARE @res int;
+            EXEC @res = sp_getapplock
+                @Resource = {0},
+                @LockMode = 'Exclusive',
+                @LockOwner = 'Transaction',
+                @LockTimeout = {1};
+            SELECT @res AS [Value];
+            """,
+            lockResource,
+            AppLockTimeoutMs)
+            .FirstOrDefaultAsync(ct);
+        
+        // synchronous grant (0), granted after waiting (1)
+        // timeout (-1), cancellation (-2), deadlock (-3), error (-999).
+        return lockResult >= 0;
+    }
+    
+    public static bool IsConcurrencyOrDeadlockException(Exception ex)
+    {
+        if (ex is DbUpdateConcurrencyException)
+        {
+            return true;
+        }
+        
+        var sqlException = ex as SqlException ?? ex.InnerException as SqlException;
+        
+        // 1205 = Deadlock victim, 1222 = Lock request time out, 2601/2627 = Unique constraint violation
+        return sqlException?.Number is 1205 or 1222 or 2601 or 2627;
     }
 }
