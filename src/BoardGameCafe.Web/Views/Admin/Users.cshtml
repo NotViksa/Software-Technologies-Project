@@ -1,0 +1,123 @@
+
+@model List<BoardGameCafe.Web.Domain.Entities.ApplicationUser>
+
+@{
+    ViewData["Title"] = "Управление на потребителите";
+
+    var userRoles =
+        (Dictionary<Guid, string>)ViewBag.UserRoles;
+}
+
+<div class="container py-4">
+
+    <h1>УПРАВЛЕНИЕ НА ПОТРЕБИТЕЛИТЕ</h1>
+
+    <a asp-action="Index" class="btn btn-outline-dark mb-4">
+        Назад
+    </a>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="card p-4 mb-4">
+
+        <h3>Регистрирани потребители: @Model.Count</h3>
+
+        <p>
+            Управление на потребителските профили,
+            роли и права за достъп.
+        </p>
+
+    </div>
+
+    <div class="row g-4">
+
+        @foreach (var user in Model)
+        {
+            var currentRole = userRoles[user.Id];
+
+            <div class="col-md-6">
+
+                <div class="card p-4 h-100">
+
+                    <h4>@user.Email</h4>
+
+                    <p>
+                        Текуща роля:
+                        <strong>@currentRole</strong>
+                    </p>
+
+                    @if (user.UserName == User.Identity?.Name)
+                    {
+                        <div class="alert alert-info">
+                            Това е твоят профил.
+                            Не можеш да променяш
+                            собствената си роля.
+                        </div>
+                    }
+                    else
+                    {
+                        <form asp-action="UpdateUserRole"
+                              method="post">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="id"
+                                   value="@user.Id" />
+
+                            <div class="mb-3">
+
+                                <label class="form-label">
+                                    Потребителска роля
+                                </label>
+
+                                <select name="role"
+                                        class="form-select">
+
+                                    <option value="Customer"
+                                            selected="@(currentRole == "Customer")">
+                                        Customer - Клиент
+                                    </option>
+
+                                    <option value="Employee"
+                                            selected="@(currentRole == "Employee")">
+                                        Employee - Служител
+                                    </option>
+
+                                    <option value="Manager"
+                                            selected="@(currentRole == "Manager")">
+                                        Manager - Управител
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                            <button type="submit"
+                                    class="btn btn-dark">
+                                Запази ролята
+                            </button>
+
+                        </form>
+                    }
+
+                </div>
+
+            </div>
+        }
+
+    </div>
+
+</div>

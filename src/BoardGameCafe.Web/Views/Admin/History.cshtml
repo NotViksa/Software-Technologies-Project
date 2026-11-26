@@ -1,0 +1,142 @@
+
+@model List<BoardGameCafe.Web.Domain.Entities.AuditLog>
+
+@{
+    ViewData["Title"] = "История на действията";
+}
+
+<style>
+    .audit-table {
+        width: 100%;
+        height: auto;
+        border-collapse: collapse;
+        transform: none;
+        box-shadow: none;
+        background: transparent;
+    }
+
+    .audit-table th {
+        padding: 14px;
+        background: #216b61;
+        color: white;
+        text-align: left;
+        vertical-align: middle;
+        font-size: 14px;
+    }
+
+    .audit-table td {
+        padding: 16px 14px;
+        height: auto;
+        vertical-align: middle;
+        border-bottom: 1px solid #d5cec2;
+        font-size: 14px;
+        overflow-wrap: anywhere;
+    }
+
+    .audit-table tbody tr:hover {
+        background: #eee7da;
+    }
+
+    .audit-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .audit-table .audit-date {
+        min-width: 130px;
+        white-space: nowrap;
+    }
+
+    .audit-table .audit-details {
+        min-width: 250px;
+        line-height: 1.6;
+    }
+</style>
+
+<div class="container py-4">
+
+    <h1>ИСТОРИЯ НА ДЕЙСТВИЯТА</h1>
+
+    <p>Дневник на административните промени в системата.</p>
+
+    <a asp-action="Index" class="btn btn-outline-dark mb-4">
+        Назад
+    </a>
+
+    <div class="card p-4 mb-4">
+        <h3>Показани действия: @Model.Count</h3>
+
+        <p class="mb-0">
+            Последните 500 административни действия.
+        </p>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="card p-4">
+
+            <h4>Все още няма записани действия.</h4>
+
+            <p class="mb-0">
+                Тук ще се появяват направените
+                административни промени.
+            </p>
+
+        </div>
+    }
+    else
+    {
+        <div class="card p-4">
+
+            <div class="table-responsive">
+
+                <table class="audit-table">
+
+                    <thead>
+                        <tr>
+                            <th>Дата и час (UTC)</th>
+                            <th>Администратор</th>
+                            <th>Действие</th>
+                            <th>Категория</th>
+                            <th>Подробности</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var log in Model)
+                        {
+                            <tr>
+                                <td class="audit-date">
+                                    @log.CreatedAt.ToString("dd.MM.yyyy")
+                                    <br />
+                                    @log.CreatedAt.ToString("HH:mm:ss")
+                                </td>
+
+                                <td>
+                                    <strong>@log.UserEmail</strong>
+                                </td>
+
+                                <td>
+                                    @log.Action
+                                </td>
+
+                                <td>
+                                    @log.EntityName
+                                </td>
+
+                                <td class="audit-details">
+                                    @log.Details
+                                </td>
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+    }
+
+</div>

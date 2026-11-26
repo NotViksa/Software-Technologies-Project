@@ -1,0 +1,187 @@
+
+@model List<BoardGameCafe.Web.Domain.Entities.Table>
+
+@{
+    ViewData["Title"] = "Управление на масите";
+    var zones = (List<BoardGameCafe.Web.Domain.Entities.Zone>)ViewBag.Zones;
+}
+
+<div class="container py-4">
+
+    <h1>УПРАВЛЕНИЕ НА МАСИТЕ</h1>
+
+    <a asp-action="Index" class="btn btn-outline-dark mb-4">
+        Назад
+    </a>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="card p-4 mb-4">
+
+        <h3>Добавяне на нова маса</h3>
+
+        <form asp-action="CreateTable" method="post">
+
+            @Html.AntiForgeryToken()
+
+            <div class="mb-3">
+                <label class="form-label">Име на масата</label>
+
+                <input name="name"
+                       class="form-control"
+                       maxlength="40"
+                       required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Брой места</label>
+
+                <input type="number"
+                       name="capacity"
+                       min="1"
+                       class="form-control"
+                       required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Зона</label>
+
+                <select name="zoneId"
+                        class="form-select"
+                        required>
+
+                    <option value="">Избери зона</option>
+
+                    @foreach (var zone in zones.Where(x => x.IsActive))
+                    {
+                        <option value="@zone.Id">
+                            @zone.Name
+                        </option>
+                    }
+
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-dark">
+                Добави маса
+            </button>
+
+        </form>
+
+    </div>
+
+    <h2>Съществуващи маси (@Model.Count)</h2>
+
+    <div class="row g-4">
+
+        @foreach (var table in Model)
+        {
+            <div class="col-md-6">
+
+                <div class="card p-4 h-100">
+
+                    <h4>@table.Name</h4>
+
+                    @if (table.IsActive)
+                    {
+                        <span class="text-success mb-3">
+                            Активна
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="text-danger mb-3">
+                            Неактивна
+                        </span>
+                    }
+
+                    <form asp-action="UpdateTable" method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden"
+                               name="id"
+                               value="@table.Id" />
+
+                        <div class="mb-3">
+                            <label class="form-label">Име</label>
+
+                            <input name="name"
+                                   value="@table.Name"
+                                   class="form-control"
+                                   maxlength="40"
+                                   required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Брой места</label>
+
+                            <input type="number"
+                                   name="capacity"
+                                   value="@table.Capacity"
+                                   min="1"
+                                   class="form-control"
+                                   required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Зона</label>
+
+                            <select name="zoneId" class="form-select">
+
+                                @foreach (var zone in zones)
+                                {
+                                    <option value="@zone.Id"
+                                            selected="@(zone.Id == table.ZoneId)">
+                                        @zone.Name
+                                        @(!zone.IsActive ? " (Неактивна)" : "")
+                                    </option>
+                                }
+
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Статус</label>
+
+                            <select name="isActive" class="form-select">
+
+                                <option value="true"
+                                        selected="@table.IsActive">
+                                    Активна
+                                </option>
+
+                                <option value="false"
+                                        selected="@(!table.IsActive)">
+                                    Неактивна
+                                </option>
+
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-dark">
+                            Запази промените
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+        }
+
+    </div>
+
+</div>

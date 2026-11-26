@@ -1,0 +1,136 @@
+
+@model List<BoardGameCafe.Web.Domain.Entities.Reservation>
+@using BoardGameCafe.Web.Domain.Enums
+
+@{
+    ViewData["Title"] = "Управление на резервациите";
+}
+
+<div class="container py-4">
+
+    <h1>УПРАВЛЕНИЕ НА РЕЗЕРВАЦИИТЕ</h1>
+
+    <p>Преглед на резервациите от персонала.</p>
+
+    <a asp-controller="Dashboard"
+       asp-action="Index"
+       class="btn btn-outline-dark mb-4">
+        Назад към таблото
+    </a>
+
+    <div class="row g-4 mb-4">
+
+        <div class="col-md-4">
+            <div class="card p-4 h-100">
+                <h3>@Model.Count</h3>
+                <p>Общо резервации</p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-4 h-100">
+                <h3>
+                    @Model.Count(x => x.Status == ReservationStatus.Pending)
+                </h3>
+                <p>Очакват потвърждение</p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-4 h-100">
+                <h3>
+                    @Model.Count(x => x.Status == ReservationStatus.Confirmed)
+                </h3>
+                <p>Потвърдени резервации</p>
+            </div>
+        </div>
+
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="card p-4">
+            <h4>Няма резервации.</h4>
+            <p>Новите резервации ще се появяват тук.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+
+            @foreach (var reservation in Model)
+            {
+                <div class="col-md-6">
+
+                    <div class="card p-4 h-100">
+
+                        <h3>@reservation.Customer.DisplayName</h3>
+
+                        <p>@reservation.Customer.Email</p>
+
+                        <hr />
+
+                        <p>
+                            <strong>Маса:</strong>
+                            @reservation.Table.Name
+                        </p>
+
+                        <p>
+                            <strong>Зона:</strong>
+                            @reservation.Table.Zone.Name
+                        </p>
+
+                        <p>
+                            <strong>Начало:</strong>
+                            @reservation.StartAt.ToString("dd.MM.yyyy HH:mm")
+                        </p>
+
+                        <p>
+                            <strong>Край:</strong>
+                            @reservation.EndAt.ToString("dd.MM.yyyy HH:mm")
+                        </p>
+
+                        <p>
+                            <strong>Брой гости:</strong>
+                            @reservation.PartySize
+                        </p>
+
+                        <p>
+                            <strong>Бележки:</strong>
+                            @reservation.Notes
+                        </p>
+
+                        @if (reservation.Status == ReservationStatus.Pending)
+                        {
+                            <div class="alert alert-warning">
+                                Очаква потвърждение
+                            </div>
+                        }
+                        else if (reservation.Status == ReservationStatus.Confirmed)
+                        {
+                            <div class="alert alert-success">
+                                Потвърдена
+                            </div>
+                        }
+                        else if (reservation.Status == ReservationStatus.Cancelled)
+                        {
+                            <div class="alert alert-danger">
+                                Отменена
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-secondary">
+                                @reservation.Status
+                            </div>
+                        }
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+
+</div>
