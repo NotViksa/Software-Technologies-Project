@@ -1,0 +1,114 @@
+
+@model List<BoardGameCafe.Web.Domain.Entities.Zone>
+
+@{
+    ViewData["Title"] = "Управление на зоните";
+}
+
+<div class="container py-4">
+
+    <h1>УПРАВЛЕНИЕ НА ЗОНИТЕ</h1>
+
+    <a asp-action="Index" class="btn btn-outline-dark mb-4">
+        Назад
+    </a>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="card p-4 mb-4">
+
+        <h3>Добавяне на нова зона</h3>
+
+        <form asp-action="CreateZone" method="post">
+
+            @Html.AntiForgeryToken()
+
+            <div class="mb-3">
+                <label>Име на зоната</label>
+                <input name="name"
+                       class="form-control"
+                       maxlength="80"
+                       required />
+            </div>
+
+            <div class="mb-3">
+                <label>Описание</label>
+                <textarea name="description"
+                          class="form-control"
+                          maxlength="500"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-dark">
+                Добави зона
+            </button>
+
+        </form>
+
+    </div>
+
+    <h2>Съществуващи зони</h2>
+
+    @foreach (var zone in Model)
+    {
+        <div class="card p-4 mb-4">
+
+            <form asp-action="UpdateZone" method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       name="id"
+                       value="@zone.Id" />
+
+                <div class="mb-3">
+                    <label>Име</label>
+                    <input name="name"
+                           value="@zone.Name"
+                           class="form-control"
+                           maxlength="80"
+                           required />
+                </div>
+
+                <div class="mb-3">
+                    <label>Описание</label>
+                    <textarea name="description"
+                              class="form-control"
+                              maxlength="500">@zone.Description</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label>Статус</label>
+
+                    <select name="isActive" class="form-select">
+                        <option value="true" selected="@zone.IsActive">
+                            Активна
+                        </option>
+
+                        <option value="false" selected="@(!zone.IsActive)">
+                            Неактивна
+                        </option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-dark">
+                    Запази промените
+                </button>
+
+            </form>
+
+        </div>
+    }
+
+</div>

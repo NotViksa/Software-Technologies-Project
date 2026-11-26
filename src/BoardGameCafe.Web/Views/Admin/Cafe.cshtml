@@ -1,0 +1,95 @@
+
+@model BoardGameCafe.Web.Domain.Entities.Cafe
+
+@{
+    ViewData["Title"] = "Настройки на кафенето";
+}
+
+<div class="container py-4">
+
+    <h1>НАСТРОЙКИ НА КАФЕНЕТО</h1>
+
+    <a asp-action="Index" class="btn btn-outline-dark mb-4">
+        Назад
+    </a>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    <div class="card p-4">
+
+        <form asp-action="Cafe" method="post">
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" name="id" value="@Model.Id" />
+
+            <div asp-validation-summary="All"
+                 class="text-danger"></div>
+
+            <div class="mb-3">
+                <label class="form-label">Име на кафенето</label>
+
+                <input name="name"
+                       class="form-control"
+                       value="@Model.Name"
+                       maxlength="120"
+                       required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Адрес</label>
+
+                <input name="address"
+                       class="form-control"
+                       value="@Model.Address"
+                       maxlength="200"
+                       required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Описание</label>
+
+                <textarea name="description"
+                          class="form-control"
+                          maxlength="2000"
+                          rows="4">@Model.Description</textarea>
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Отваря в</label>
+
+                    <input type="time"
+                           name="openingTime"
+                           class="form-control"
+                           value="@Model.OpeningTime.ToString(@"hh\:mm")"
+                           required />
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Затваря в</label>
+
+                    <input type="time"
+                           name="closingTime"
+                           class="form-control"
+                           value="@Model.ClosingTime.ToString(@"hh\:mm")"
+                           required />
+                </div>
+
+            </div>
+
+            <button type="submit" class="btn btn-dark">
+                Запази промените
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
