@@ -122,17 +122,20 @@ public partial class BookingService
         reservationGame?.IsCopyGuaranteed ?? false);
     }
     
-    private static void SyncSessionLifecycle(ReservationStatus newStatus, Reservation reservation)
+    private void SyncSessionLifecycle(ReservationStatus newStatus, Reservation reservation)
     {
         var now = DateTime.UtcNow;
         
         if (newStatus == ReservationStatus.InSession && !reservation.Sessions.Any(s => s.EndedAt is null))
         {
-            reservation.Sessions.Add(new Session
+            var session = new Session
             {
                 ReservationId = reservation.Id,
                 StartedAt = now
-            });
+            };
+            
+            reservation.Sessions.Add(session);
+            _dbContext.Sessions.Add(session);
         }
         else if (newStatus == ReservationStatus.Completed)
         {
