@@ -13,13 +13,13 @@ public partial class BookingService : IBookingService
 {
     private const int MaxNotesLength = 500;
     
-    private readonly AppDbContext _db;
+    private readonly AppDbContext _dbContext;
     private readonly SqlServerTransactionRunner _transactionRunner;
     private readonly ICurrentUserContext _currentUser;
     
-    public BookingService(AppDbContext db, SqlServerTransactionRunner transactionRunner, ICurrentUserContext currentUser)
+    public BookingService(AppDbContext dbContext, SqlServerTransactionRunner transactionRunner, ICurrentUserContext currentUser)
     {
-        _db = db;
+        _dbContext = dbContext;
         _transactionRunner = transactionRunner;
         _currentUser = currentUser;
     }
@@ -47,7 +47,7 @@ public partial class BookingService : IBookingService
         Cafe? cafe,
         CancellationToken ct)
     {
-        if (!await _db.Users.AsNoTracking().AnyAsync(u => u.Id == command.CustomerUserId, ct))
+        if (!await _dbContext.Users.AsNoTracking().AnyAsync(u => u.Id == command.CustomerUserId, ct))
         {
             return Result<ReservationDto>.Failure(ErrorCodes.NotFound, "Customer account was not found.");
         }
@@ -58,13 +58,13 @@ public partial class BookingService : IBookingService
             return Result<ReservationDto>.Failure(gameError.ErrorCode!, gameError.ErrorMessage!);
         }
         
-        var tables = await _db.Tables
+        var tables = await _dbContext.Tables
             .AsNoTracking()
             .Where(t => t.IsActive && t.Zone.IsActive && t.Capacity >= command.PartySize)
             .ToListAsync(ct);
         
         var dayStart = command.StartAt.Date;
-        var sameDayReservations = await _db.Reservations
+        var sameDayReservations = await _dbContext.Reservations
             .AsNoTracking()
             .Include(r => r.Games)
             .Where(r => r.StartAt >= dayStart && r.StartAt < dayStart.AddDays(1))
@@ -90,8 +90,8 @@ public partial class BookingService : IBookingService
         
         var reservation = BuildReservationEntity(command, allocation.Value.Table, allocation.Value.Copy, out var reservationGame);
         
-        _db.Reservations.Add(reservation);
-        await _db.SaveChangesAsync(ct);
+        _dbContext.Reservations.Add(reservation);
+        await _dbContext.SaveChangesAsync(ct);
         
         return Result<ReservationDto>.Success(MapToDto(reservation, allocation.Value.Table, reservationGame));
     }
@@ -103,7 +103,7 @@ public partial class BookingService : IBookingService
             return Result.Failure(ErrorCodes.Forbidden, "Authentication is required to cancel a reservation.");
         }
         
-        var reservation = await _db.Reservations
+        var reservation = await _dbContext.Reservations
             .FirstOrDefaultAsync(r => r.Id == reservationId, ct);
         
         if (reservation is null)
@@ -116,17 +116,17 @@ public partial class BookingService : IBookingService
             return Result.Failure(ErrorCodes.Forbidden, "You do not have permission to cancel another customer's reservation.");
         }
         
-        var transaction = ReservationStateMachine.ValidateTransition(reservation.Status, ReservationStatus.Cancelled, _currentUser.IsStaff);
-        if (transaction.IsFailure)
+        var transition = ReservationStateMachine.ValidateTransition(reservation.Status, ReservationStatus.Cancelled, _currentUser.IsStaff);
+        if (transition.IsFailure)
         {
-            return transaction;
+            return transition;
         }
         
         reservation.Status = ReservationStatus.Cancelled;
         
         try
         {
-            await _db.SaveChangesAsync(ct);
+            await _dbContext.SaveChangesAsync(ct);
             return Result.Success();
         }
         catch (DbUpdateConcurrencyException)
@@ -135,5 +135,49 @@ public partial class BookingService : IBookingService
         }
     }
     
-    public Task<Result> ChangeStatusAsync(Guid reservationId, ReservationStatus newStatus, CancellationToken ct) => throw new NotImplementedException();
+    public async Task<Result> ChangeStatusAsync(Guid reservationId, ReservationStatus newStatus, CancellationToken ct)
+    {
+        if (!_currentUser.IsAuthenticated || !_currentUser.UserId.HasValue)
+        {
+            return Result.Failure(ErrorCodes.Forbidden, "Authentication is required to modify a reservation.");
+        }
+        
+        if (newStatus == ReservationStatus.Cancelled)
+        {
+            return await CancelAsync(reservationId, ct);
+        }
+        
+        var reservation = await _dbContext.Reservations
+            .Include(r => r.Sessions)
+            .FirstOrDefaultAsync(r => r.Id == reservationId, ct);
+        
+        if (reservation is null)
+        {
+            return Result.Failure(ErrorCodes.NotFound, "Reservation was not found.");
+        }
+        
+        if (!_currentUser.IsStaff && reservation.CustomerUserId != _currentUser.UserId.Value)
+        {
+            return Result.Failure(ErrorCodes.Forbidden, "You do not have permission to cancel another customer's reservation.");
+        }
+        
+        var transition = ReservationStateMachine.ValidateTransition(reservation.Status, newStatus, _currentUser.IsStaff);
+        if (transition.IsFailure)
+        {
+            return transition;
+        }
+        
+        reservation.Status = newStatus;
+        SyncSessionLifecycle(reservationId, newStatus, reservation);
+        
+        try
+        {
+            await _dbContext.SaveChangesAsync(ct);
+            return Result.Success();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure(ErrorCodes.ReservationConflict, "The reservation was modified by another request. Please refresh and try again.");
+        }
+    }
 }

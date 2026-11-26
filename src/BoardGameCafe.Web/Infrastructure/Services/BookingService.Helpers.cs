@@ -11,7 +11,7 @@ public partial class BookingService
 {
     private async Task<Cafe?> ResolveActiveCafeAsync(Guid? cafeId, CancellationToken ct)
     {
-        var query = _db.Cafes.AsNoTracking().Where(c => c.IsActive);
+        var query = _dbContext.Cafes.AsNoTracking().Where(c => c.IsActive);
         if (cafeId.HasValue)
         {
             query = query.Where(c => c.Id == cafeId.Value);
@@ -27,7 +27,7 @@ public partial class BookingService
             return (null, [], null);
         }
         
-        var game = await _db.Games
+        var game = await _dbContext.Games
             .AsNoTracking()
             .FirstOrDefaultAsync(g => g.Id == gameId.Value && g.IsActive, ct);
         
@@ -36,7 +36,7 @@ public partial class BookingService
             return (null, [], Result.Failure(ErrorCodes.NotFound, "Requested game was not found or is inactive."));
         }
         
-        var copies = await _db.GameCopies
+        var copies = await _dbContext.GameCopies
             .AsNoTracking()
             .Where(c => c.GameId == gameId.Value)
             .ToListAsync(ct);
@@ -120,5 +120,26 @@ public partial class BookingService
         reservationGame?.GameId,
         reservationGame?.GameCopyId,
         reservationGame?.IsCopyGuaranteed ?? false);
+    }
+    
+    private static void SyncSessionLifecycle(Guid reservationId, ReservationStatus newStatus, Reservation reservation)
+    {
+        var now = DateTime.UtcNow;
+        
+        if (newStatus == ReservationStatus.InSession && !reservation.Sessions.Any(s => s.EndedAt is null))
+        {
+            reservation.Sessions.Add(new Session
+            {
+                ReservationId = reservationId,
+                StartedAt = now
+            });
+        }
+        else if (newStatus == ReservationStatus.Completed)
+        {
+            foreach (var openSession in reservation.Sessions.Where(s => s.EndedAt is null))
+            {
+                openSession.EndedAt = now;
+            }
+        }
     }
 }
