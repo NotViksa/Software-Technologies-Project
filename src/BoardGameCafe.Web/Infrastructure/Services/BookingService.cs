@@ -96,55 +96,13 @@ public partial class BookingService : IBookingService
         return Result<ReservationDto>.Success(MapToDto(reservation, allocation.Value.Table, reservationGame));
     }
     
-    public async Task<Result> CancelAsync(Guid reservationId, CancellationToken ct)
-    {
-        if (!_currentUser.IsAuthenticated || !_currentUser.UserId.HasValue)
-        {
-            return Result.Failure(ErrorCodes.Forbidden, "Authentication is required to cancel a reservation.");
-        }
-        
-        var reservation = await _dbContext.Reservations
-            .FirstOrDefaultAsync(r => r.Id == reservationId, ct);
-        
-        if (reservation is null)
-        {
-            return Result.Failure(ErrorCodes.NotFound, "Reservation was not found.");
-        }
-        
-        if (!_currentUser.IsStaff && reservation.CustomerUserId != _currentUser.UserId.Value)
-        {
-            return Result.Failure(ErrorCodes.Forbidden, "You do not have permission to cancel another customer's reservation.");
-        }
-        
-        var transition = ReservationStateMachine.ValidateTransition(reservation.Status, ReservationStatus.Cancelled, _currentUser.IsStaff);
-        if (transition.IsFailure)
-        {
-            return transition;
-        }
-        
-        reservation.Status = ReservationStatus.Cancelled;
-        
-        try
-        {
-            await _dbContext.SaveChangesAsync(ct);
-            return Result.Success();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            return Result.Failure(ErrorCodes.ReservationConflict, "The reservation was modified by another request. Please refresh and try again.");
-        }
-    }
+    public async Task<Result> CancelAsync(Guid reservationId, CancellationToken ct) => await ChangeStatusAsync(reservationId, ReservationStatus.Cancelled, ct);
     
     public async Task<Result> ChangeStatusAsync(Guid reservationId, ReservationStatus newStatus, CancellationToken ct)
     {
         if (!_currentUser.IsAuthenticated || !_currentUser.UserId.HasValue)
         {
-            return Result.Failure(ErrorCodes.Forbidden, "Authentication is required to modify a reservation.");
-        }
-        
-        if (newStatus == ReservationStatus.Cancelled)
-        {
-            return await CancelAsync(reservationId, ct);
+            return Result.Failure(ErrorCodes.Forbidden, "Authentication is required to update a reservation.");
         }
         
         var reservation = await _dbContext.Reservations
@@ -158,7 +116,7 @@ public partial class BookingService : IBookingService
         
         if (!_currentUser.IsStaff && reservation.CustomerUserId != _currentUser.UserId.Value)
         {
-            return Result.Failure(ErrorCodes.Forbidden, "You do not have permission to cancel another customer's reservation.");
+            return Result.Failure(ErrorCodes.Forbidden, "You do not have permission to modify another customer's reservation.");
         }
         
         var transition = ReservationStateMachine.ValidateTransition(reservation.Status, newStatus, _currentUser.IsStaff);
@@ -168,7 +126,7 @@ public partial class BookingService : IBookingService
         }
         
         reservation.Status = newStatus;
-        SyncSessionLifecycle(reservationId, newStatus, reservation);
+        SyncSessionLifecycle(newStatus, reservation);
         
         try
         {

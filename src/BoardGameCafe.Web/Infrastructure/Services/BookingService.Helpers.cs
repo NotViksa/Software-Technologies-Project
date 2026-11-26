@@ -122,7 +122,7 @@ public partial class BookingService
         reservationGame?.IsCopyGuaranteed ?? false);
     }
     
-    private static void SyncSessionLifecycle(Guid reservationId, ReservationStatus newStatus, Reservation reservation)
+    private static void SyncSessionLifecycle(ReservationStatus newStatus, Reservation reservation)
     {
         var now = DateTime.UtcNow;
         
@@ -130,7 +130,7 @@ public partial class BookingService
         {
             reservation.Sessions.Add(new Session
             {
-                ReservationId = reservationId,
+                ReservationId = reservation.Id,
                 StartedAt = now
             });
         }
