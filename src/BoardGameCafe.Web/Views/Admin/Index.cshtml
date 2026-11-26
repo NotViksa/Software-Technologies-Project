@@ -1,0 +1,93 @@
+
+@{
+    ViewData["Title"] = "Администрация";
+}
+
+<div class="container py-4">
+
+    <h1>АДМИНИСТРАЦИЯ</h1>
+
+    <p>Управление на кафенето и персонала.</p>
+
+    <hr />
+
+    <div class="row g-4">
+
+        <div class="col-md-4">
+            <div class="card h-100 p-4">
+
+                <h3>Кафене</h3>
+                <p>Настройки и работно време.</p>
+
+                <a asp-controller="Admin"
+                   asp-action="Cafe"
+                   class="btn btn-dark mt-auto">
+                    Управление
+                </a>
+
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 p-4">
+
+                <h3>Зони</h3>
+                <p>Управление на зоните.</p>
+
+                <a asp-controller="Admin"
+                   asp-action="Zones"
+                   class="btn btn-dark mt-auto">
+                    Управление
+                </a>
+
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 p-4">
+
+                <h3>Маси</h3>
+                <p>Управление на масите и капацитета.</p>
+
+                <a asp-controller="Admin"
+                   asp-action="Tables"
+                   class="btn btn-dark mt-auto">
+                    Управление
+                </a>
+
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 p-4">
+
+                <h3>Потребители</h3>
+                <p>Управление на персонала и ролите.</p>
+
+                <a asp-controller="Admin"
+                   asp-action="Users"
+                   class="btn btn-dark mt-auto">
+                    Управление
+                </a>
+
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 p-4">
+
+                <h3>История</h3>
+                <p>Дневник на административните действия.</p>
+
+                <a asp-controller="Admin"
+   asp-action="History"
+   class="btn btn-dark mt-auto">
+    Виж историята
+</a>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
