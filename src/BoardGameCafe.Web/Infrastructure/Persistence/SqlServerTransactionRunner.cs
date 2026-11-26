@@ -54,7 +54,7 @@ public sealed class SqlServerTransactionRunner
         }
         
         var lockResource = $"Reservation_Lock_{cafeScopeId:N}_{reservationDate:yyyyMMdd}";
-        var returnCode = new SqlParameter("@ReturnCode", SqlDbType.Int) { Direction = ParameterDirection.ReturnValue };
+        var returnCode = new SqlParameter("@ReturnCode", SqlDbType.Int) { Direction = ParameterDirection.Output };
         
         await _dbContext.Database.ExecuteSqlRawAsync(
             "EXEC @ReturnCode = sp_getapplock @Resource = @Resource, @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = @LockTimeout",
@@ -65,7 +65,7 @@ public sealed class SqlServerTransactionRunner
             ],
             ct);
         
-        return returnCode.Value is >= 0;
+        return returnCode.Value is int code && code >= 0;
     }
     
     private static bool IsConcurrencyOrDeadlockException(Exception ex)
