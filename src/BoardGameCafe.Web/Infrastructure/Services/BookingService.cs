@@ -15,11 +15,13 @@ public partial class BookingService : IBookingService
     
     private readonly AppDbContext _db;
     private readonly SqlServerTransactionRunner _transactionRunner;
+    private readonly ICurrentUserContext _currentUser;
     
-    public BookingService(AppDbContext db, SqlServerTransactionRunner transactionRunner)
+    public BookingService(AppDbContext db, SqlServerTransactionRunner transactionRunner, ICurrentUserContext currentUser)
     {
         _db = db;
         _transactionRunner = transactionRunner;
+        _currentUser = currentUser;
     }
     
     public async Task<Result<ReservationDto>> CreateAsync(CreateReservationCommand command, CancellationToken ct)
@@ -94,6 +96,44 @@ public partial class BookingService : IBookingService
         return Result<ReservationDto>.Success(MapToDto(reservation, allocation.Value.Table, reservationGame));
     }
     
-    public Task<Result> CancelAsync(Guid reservationId, CancellationToken ct) => throw new NotImplementedException();
+    public async Task<Result> CancelAsync(Guid reservationId, CancellationToken ct)
+    {
+        if (!_currentUser.IsAuthenticated || !_currentUser.UserId.HasValue)
+        {
+            return Result.Failure(ErrorCodes.Forbidden, "Authentication is required to cancel a reservation.");
+        }
+        
+        var reservation = await _db.Reservations
+            .FirstOrDefaultAsync(r => r.Id == reservationId, ct);
+        
+        if (reservation is null)
+        {
+            return Result.Failure(ErrorCodes.NotFound, "Reservation was not found.");
+        }
+        
+        if (!_currentUser.IsStaff && reservation.CustomerUserId != _currentUser.UserId.Value)
+        {
+            return Result.Failure(ErrorCodes.Forbidden, "You do not have permission to cancel another customer's reservation.");
+        }
+        
+        var transaction = ReservationStateMachine.ValidateTransition(reservation.Status, ReservationStatus.Cancelled, _currentUser.IsStaff);
+        if (transaction.IsFailure)
+        {
+            return transaction;
+        }
+        
+        reservation.Status = ReservationStatus.Cancelled;
+        
+        try
+        {
+            await _db.SaveChangesAsync(ct);
+            return Result.Success();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure(ErrorCodes.ReservationConflict, "The reservation was modified by another request. Please refresh and try again.");
+        }
+    }
+    
     public Task<Result> ChangeStatusAsync(Guid reservationId, ReservationStatus newStatus, CancellationToken ct) => throw new NotImplementedException();
 }
