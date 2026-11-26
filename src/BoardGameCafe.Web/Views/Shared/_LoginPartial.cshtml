@@ -2,17 +2,20 @@
 @using Microsoft.AspNetCore.Identity
 @using BoardGameCafe.Web.Domain.Entities
 @inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
 
 @if (SignInManager.IsSignedIn(User))
 {
-    var role = User.IsInRole("Manager") ? "Manager"
-        : User.IsInRole("Employee") ? "Employee"
-        : User.IsInRole("Customer") ? "Customer"
-        : "Потребител";
+    var user = await UserManager.GetUserAsync(User);
+    var displayName = user?.DisplayName;
+    if (string.IsNullOrWhiteSpace(displayName))
+    {
+        displayName = user?.UserName ?? User.Identity?.Name;
+    }
 
     <div class="auth-nav">
 
-        <span class="auth-nav__user">@role</span>
+        <span class="auth-nav__user">@displayName</span>
 
         <form asp-area="Identity"
               asp-page="/Account/Logout"
