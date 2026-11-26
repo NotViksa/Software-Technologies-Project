@@ -20,6 +20,8 @@ public static class DependencyInjection
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IAvailabilityService, AvailabilityService>();
         services.AddScoped<IInventoryService, InventoryService>();
+        services.AddScoped<IBookingService, BookingService>();
+        services.AddScoped<SqlServerTransactionRunner>();
 
         return services;
     }
